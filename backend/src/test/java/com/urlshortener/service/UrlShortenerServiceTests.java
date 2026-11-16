@@ -1,9 +1,8 @@
-package com.urlshortener;
+package com.urlshortener.service;
 
 import com.urlshortener.model.ShortenUrlRequest;
 import com.urlshortener.model.ShortenUrlResponse;
 import com.urlshortener.repository.ShortenedUrlRepository;
-import com.urlshortener.service.UrlShortenerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;

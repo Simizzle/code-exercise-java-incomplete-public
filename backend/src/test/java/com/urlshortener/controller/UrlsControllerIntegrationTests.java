@@ -1,4 +1,4 @@
-package com.urlshortener;
+package com.urlshortener.controller;
 
 import com.urlshortener.model.PaginatedResponse;
 import com.urlshortener.model.ShortenUrlResponse;
@@ -166,7 +166,7 @@ class UrlsControllerIntegrationTests {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             assertThat(body).isNotNull();
-            assertThat(body.content()).extracting(UrlListItem::getAlias).containsExactly(
+            assertThat(body.content()).extracting(UrlListItem::alias).containsExactly(
                     "alias7",
                     "alias6",
                     "alias5",

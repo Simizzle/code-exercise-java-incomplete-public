@@ -7,9 +7,14 @@ interface UseUrlShortenerReturn {
   loading: boolean;
   error: string | null;
   lastCreated: ShortenUrlResponse | null;
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
   shorten: (fullUrl: string, customAlias?: string) => Promise<void>;
   deleteUrl: (alias: string) => Promise<void>;
   clearLastCreated: () => void;
+  changePage: (newPage: number) => void;
 }
 
 export function useUrlShortener(): UseUrlShortenerReturn {
@@ -18,22 +23,34 @@ export function useUrlShortener(): UseUrlShortenerReturn {
   const [error, setError] = useState<string | null>(null);
   const [lastCreated, setLastCreated] = useState<ShortenUrlResponse | null>(null);
 
-  const fetchAll = useCallback(async () => {
+  const [page, setPage] = useState(0);
+  const [size] = useState(10);
+  const [totalElements, setTotalElements] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+
+  const fetchPage = useCallback(async (pageNumber: number) => {
     setLoading(true);
     setError(null);
+
     try {
-      const data = await api.listAll();
-      setUrls(data);
+      const data = await api.listAll(pageNumber, size);
+
+      setUrls(data.content);
+      setPage(data.page);
+      setTotalElements(data.totalElements);
+      setTotalPages(data.totalPages);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to load URLs.');
+      setError(
+        e instanceof Error ? e.message : 'Failed to load URLs.'
+      );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [size]);
 
-  useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+   useEffect(() => {
+    fetchPage(0);
+  }, [fetchPage]);
 
   const shorten = useCallback(async (fullUrl: string, customAlias?: string) => {
     setError(null);
@@ -41,24 +58,54 @@ export function useUrlShortener(): UseUrlShortenerReturn {
     try {
       const result = await api.shorten({ fullUrl, customAlias: customAlias || undefined });
       setLastCreated(result);
-      // Refresh the list
-      await fetchAll();
+
+      await fetchPage(0);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to shorten URL.');
     }
-  }, [fetchAll]);
+  }, [fetchPage]);
 
   const deleteUrl = useCallback(async (alias: string) => {
     setError(null);
+
     try {
+
       await api.delete(alias);
-      setUrls((prev) => prev.filter((u) => u.alias !== alias));
+
+      const targetPage = urls.length === 1 && page > 0 ? page - 1 : page;
+
+      await fetchPage(targetPage);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to delete URL.');
+      setError(
+        e instanceof Error ? e.message : 'Failed to delete URL.'
+      );
     }
-  }, []);
+  }, [fetchPage, urls.length, page]);
 
-  const clearLastCreated = useCallback(() => setLastCreated(null), []);
+  const changePage = useCallback((newPage: number) => {
+    if (newPage >= 0 && newPage < totalPages) {
+      fetchPage(newPage);
+    }
+  }, [fetchPage, totalPages]);
 
-  return { urls, loading, error, lastCreated, shorten, deleteUrl, clearLastCreated };
+  const clearLastCreated = useCallback(
+    () => setLastCreated(null),
+    []
+  );
+
+  return {
+    urls,
+    loading,
+    error,
+    lastCreated,
+    page,
+    size,
+    totalElements,
+    totalPages,
+    shorten,
+    deleteUrl,
+    changePage,
+    clearLastCreated
+  };
+
 }

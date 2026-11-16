@@ -69,4 +69,120 @@ describe('api service', () => {
     await expect(api.delete('ghost'))
       .rejects.toThrow("No URL found for alias 'ghost'.");
   });
+
+  it('listAll passes custom page and size in the query string', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({}),
+      } as Response);
+
+      await api.listAll(3, 25);
+
+      expect(fetch).toHaveBeenCalledWith('/urls?page=3&size=25');
+    });
+
+    it('listAll returns the parsed response body', async () => {
+      const pageBody = {
+        items: [{ alias: 'abc', fullUrl: 'https://example.com', shortUrl: 'http://localhost/abc' }],
+        page: 0,
+        size: 10,
+        totalItems: 1,
+        totalPages: 1,
+      };
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => pageBody,
+      } as Response);
+
+      await expect(api.listAll()).resolves.toEqual(pageBody);
+    });
+
+    it('listAll throws a generic error when the response is not ok', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => ({ error: 'boom' }),
+      } as Response);
+
+      await expect(api.listAll()).rejects.toThrow('Failed to fetch URLs.');
+    });
+
+    it('listAll throws on 404', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 404,
+        json: async () => ({}),
+      } as Response);
+
+      await expect(api.listAll()).rejects.toThrow('Failed to fetch URLs.');
+    });
+
+    it('listAll propagates network failures', async () => {
+      globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+
+      await expect(api.listAll()).rejects.toThrow('Failed to fetch');
+    });
+
+    it('listAll rejects when a successful response has an invalid JSON body', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => { throw new SyntaxError('Unexpected token'); },
+      } as Response);
+
+      await expect(api.listAll()).rejects.toThrow();
+    });
+
+    it('delete URL-encodes the alias', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 204,
+        json: async () => undefined,
+      } as Response);
+
+      await api.delete('my alias/with?odd#chars');
+
+      expect(fetch).toHaveBeenCalledWith(
+        `/${encodeURIComponent('my alias/with?odd#chars')}`,
+        expect.objectContaining({ method: 'DELETE' })
+      );
+    });
+
+    it('delete resolves to undefined on 204 No Content', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 204,
+        json: async () => { throw new Error('204 has no body'); },
+      } as Response);
+
+      await expect(api.delete('my-alias')).resolves.toBeUndefined();
+    });
+
+    it('delete falls back to a status-based message when the error body is not JSON', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 500,
+        json: async () => { throw new SyntaxError('Unexpected token'); },
+      } as Response);
+
+      await expect(api.delete('my-alias')).rejects.toThrow('Request failed (500)');
+    });
+
+    it('delete falls back to a status-based message when the body has no error field', async () => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 403,
+        json: async () => ({ message: 'nope' }),
+      } as Response);
+
+      await expect(api.delete('my-alias')).rejects.toThrow('Request failed (403)');
+    });
+
+    it('delete propagates network failures', async () => {
+      globalThis.fetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch'));
+
+      await expect(api.delete('my-alias')).rejects.toThrow('Failed to fetch');
+    });
 });

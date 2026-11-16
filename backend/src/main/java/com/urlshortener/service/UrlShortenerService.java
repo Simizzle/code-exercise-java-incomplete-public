@@ -1,5 +1,6 @@
 package com.urlshortener.service;
 
+import com.urlshortener.model.PaginatedResponse;
 import com.urlshortener.model.ShortenUrlRequest;
 import com.urlshortener.model.ShortenUrlResponse;
 import com.urlshortener.model.UrlListItem;
@@ -8,7 +9,9 @@ import org.springframework.stereotype.Service;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
@@ -18,7 +21,7 @@ public class UrlShortenerService {
 
     private static final String ALIAS_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     private static final int GENERATED_ALIAS_LENGTH = 7;
-
+    private static final SecureRandom RANDOM = new SecureRandom();
     private final ShortenedUrlRepository repository;
 
     public UrlShortenerService(ShortenedUrlRepository repository) {
@@ -48,25 +51,38 @@ public class UrlShortenerService {
         return repository.findFullUrlByAlias(alias).orElse(null);
     }
 
-    public List<UrlListItem> getAll(String baseUrl) {
-        return repository.findAll(baseUrl);
+    public PaginatedResponse<UrlListItem> getAll(String baseUrl, int page, int size) {
+        List<UrlListItem> urls = repository.findAll(
+                baseUrl,
+                page,
+                size
+        );
+        long totalElements = repository.countAll();
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        return new PaginatedResponse<>(
+                urls,
+                page,
+                size,
+                totalElements,
+                totalPages
+        );
     }
 
-    public boolean delete(String alias) {
-        // TODO: Investigate odd delete behavior reported by clients.
-        var fullUrl = repository.findFullUrlByAlias(alias).orElse(null);
-        if (fullUrl == null) {
-            return false;
-        }
 
-        repository.save(alias + "-deleted", fullUrl, Instant.now());
-        repository.deleteByAlias(alias + "-deleted");
-        return true;
+    public boolean delete(String alias) {
+        return repository.deleteByAlias(alias);
     }
 
     private static String generateAlias() {
-        // TODO: Implement alias generation.
-        return "";
+        StringBuilder alias = new StringBuilder(GENERATED_ALIAS_LENGTH);
+
+        for (int i = 0; i < GENERATED_ALIAS_LENGTH; i++) {
+            int index = RANDOM.nextInt(ALIAS_CHARS.length());
+            alias.append(ALIAS_CHARS.charAt(index));
+        }
+
+        return alias.toString();
     }
 
     private static boolean isValidAlias(String alias) {

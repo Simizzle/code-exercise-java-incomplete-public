@@ -1,4 +1,4 @@
-import type { ShortenUrlRequest, ShortenUrlResponse, UrlListItem } from '../types/api';
+import type { ShortenUrlRequest, ShortenUrlResponse, UrlListItem, PaginatedResponse } from '../types/api';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '';
 
@@ -27,8 +27,15 @@ export const api = {
     }).then((r) => handleResponse<ShortenUrlResponse>(r));
   },
 
-  listAll(): Promise<UrlListItem[]> {
-    return fetch(`${API_BASE}/urls`).then((r) => handleResponse<UrlListItem[]>(r));
+  listAll: async (
+    page = 0,
+    size = 10
+  ): Promise<PaginatedResponse<UrlListItem>> => {
+    const response = await fetch(`/urls?page=${page}&size=${size}`);
+
+    if (!response.ok) { throw new Error('Failed to fetch URLs.'); }
+
+    return response.json();
   },
 
   delete(alias: string): Promise<void> {

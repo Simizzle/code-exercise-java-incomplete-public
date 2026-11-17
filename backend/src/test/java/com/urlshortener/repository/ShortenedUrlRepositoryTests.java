@@ -1,10 +1,7 @@
 package com.urlshortener.repository;
 
 import com.urlshortener.model.UrlListItem;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
@@ -38,8 +35,8 @@ public class ShortenedUrlRepositoryTests {
         }
 
         @Nested
-        class Init {
-
+        @DisplayName("Init tests")
+        class InitTests {
             @Test
             void createsTable() {
                 Integer count = jdbc.queryForObject(
@@ -59,8 +56,8 @@ public class ShortenedUrlRepositoryTests {
         }
 
         @Nested
-        class Save {
-
+        @DisplayName("Save tests")
+        class SaveTests {
             @Test
             void persistsAllFields() {
                 Instant createdAt = Instant.parse("2024-05-01T12:30:00Z");
@@ -95,7 +92,8 @@ public class ShortenedUrlRepositoryTests {
         }
 
         @Nested
-        class existsByAlias {
+        @DisplayName("Exists by alias tests")
+        class ExistsByAliasTests {
 
             @Test
             void returnsFalseWhenEmpty() {
@@ -125,7 +123,8 @@ public class ShortenedUrlRepositoryTests {
         }
 
         @Nested
-        class FindFullUrlBygetAlias {
+        @DisplayName("Find full URL by alias")
+        class FindFullUrlBygetAliasTests {
 
             @Test
             void returnsUrlWhenPresent() {
@@ -150,7 +149,8 @@ public class ShortenedUrlRepositoryTests {
         }
 
         @Nested
-        class FindAll {
+        @DisplayName("Find all tests")
+        class FindAllTests {
 
             @Test
             void returnsEmptyListWhenNoRows() {
@@ -221,8 +221,8 @@ public class ShortenedUrlRepositoryTests {
         }
 
         @Nested
-        class CountAll {
-
+        @DisplayName("Count all results test")
+        class CountAllTests {
             @Test
             void returnsZeroWhenEmpty() {
                 assertThat(repository.countAll()).isZero();
@@ -249,8 +249,8 @@ public class ShortenedUrlRepositoryTests {
         }
 
         @Nested
-        class DeleteBygetAlias {
-
+        @DisplayName("Delete entry by alias")
+        class DeleteBygetAliasTests {
             @Test
             void returnsTrueAndRemovesRowWhenPresent() {
                 repository.save("abc", "https://example.com", Instant.now());

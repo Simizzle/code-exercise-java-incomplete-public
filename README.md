@@ -5,7 +5,6 @@ Spring Boot REST API, and SQLite storage. Create short links with generated or
 custom aliases, browse them in a paginated list, follow redirects, and delete
 links.
 
----
 ## Features
 
 - Shorten valid HTTP and HTTPS URLs.
@@ -32,8 +31,6 @@ For local development:
 
 For the containerized setup, install Docker Engine or Docker Desktop with the
 Docker Compose plugin.
-
----
 
 ## Run locally
 
@@ -70,7 +67,6 @@ Open <http://localhost:3000>. Vite proxies `/shorten` and `/urls` to the local
 backend at `http://localhost:8080`. To use the built frontend instead, run
 `npm run build` in `frontend/`; Vite writes the production files to `frontend/dist`.
 
----
 ## API
 
 | Method | Path | Description |
@@ -170,7 +166,6 @@ curl -i -X DELETE http://localhost:8080/{alias}
 Replace `{alias}` with the alias returned by the create request. Short URLs in
 responses use the host and port of the incoming request.
 
----
 ## Docker Compose
 
 Build and start both containers from the repository root:
@@ -232,7 +227,6 @@ The backend Docker image sets `DATABASE_PATH=/data/urlshortener.db` and
   is attached. `docker compose down -v` deletes it and the stored database; do
   not use `-v` if you need to keep your data.
 
----
 ## Tests
 
 Run the backend tests from the repository root:
@@ -248,7 +242,7 @@ cd frontend
 npm ci
 npm test
 ```
----
+
 ## Repository layout
 
 ```text
@@ -256,6 +250,4 @@ backend/       Spring Boot API, SQLite repository, and backend tests
 frontend/      React application, Nginx configuration, and frontend tests
 docker-compose.yml
                Local orchestration for the frontend and backend containers
-urlshortener.db
-               SQLite database file in the repository
 ```

@@ -105,20 +105,24 @@ public class UrlShortenerService {
                 throw new IllegalArgumentException("fullUrl must be a valid URL.");
             }
 
-            var path = uri.getPath();
+            var path = uri.getRawPath();
             if (path == null || path.isBlank()) {
                 path = "/";
             }
 
-            return new URI(
-                    uri.getScheme(),
-                    uri.getUserInfo(),
-                    uri.getHost(),
-                    uri.getPort(),
-                    path,
-                    uri.getQuery(),
-                    uri.getFragment()
-            ).toString();
+            var normalized = new StringBuilder()
+                    .append(uri.getScheme()).append("://")
+                    .append(uri.getRawAuthority())
+                    .append(path);
+
+            if (uri.getRawQuery() != null) {
+                normalized.append('?').append(uri.getRawQuery());
+            }
+            if (uri.getRawFragment() != null) {
+                normalized.append('#').append(uri.getRawFragment());
+            }
+
+            return normalized.toString();
         } catch (URISyntaxException ex) {
             throw new IllegalArgumentException("fullUrl must be a valid URL.");
         }

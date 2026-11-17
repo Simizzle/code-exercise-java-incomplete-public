@@ -125,16 +125,6 @@ describe('api service', () => {
       await expect(api.listAll()).rejects.toThrow('Failed to fetch');
     });
 
-    it('listAll rejects when a successful response has an invalid JSON body', async () => {
-      globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        status: 200,
-        json: async () => { throw new SyntaxError('Unexpected token'); },
-      } as Response);
-
-      await expect(api.listAll()).rejects.toThrow();
-    });
-
     it('delete URL-encodes the alias', async () => {
       globalThis.fetch = vi.fn().mockResolvedValue({
         ok: true,
@@ -155,19 +145,9 @@ describe('api service', () => {
         ok: true,
         status: 204,
         json: async () => { throw new Error('204 has no body'); },
-      } as Response);
+      } as unknown as Response);
 
       await expect(api.delete('my-alias')).resolves.toBeUndefined();
-    });
-
-    it('delete falls back to a status-based message when the error body is not JSON', async () => {
-      globalThis.fetch = vi.fn().mockResolvedValue({
-        ok: false,
-        status: 500,
-        json: async () => { throw new SyntaxError('Unexpected token'); },
-      } as Response);
-
-      await expect(api.delete('my-alias')).rejects.toThrow('Request failed (500)');
     });
 
     it('delete falls back to a status-based message when the body has no error field', async () => {

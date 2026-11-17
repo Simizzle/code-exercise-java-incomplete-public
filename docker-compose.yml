@@ -4,6 +4,8 @@ services:
       context: ./backend
     ports:
       - "8080:8080"
+    volumes:
+      - urlshortener-data:/data
     networks:
       - app-network
   frontend:
@@ -19,3 +21,5 @@ services:
       - app-network
 networks:
   app-network:
+volumes:
+  urlshortener-data:
